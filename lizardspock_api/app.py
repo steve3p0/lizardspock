@@ -8,7 +8,7 @@ from flask.views import MethodView
 
 app = Flask(__name__)
 
-languages = [{'name' : 'JavaScript'}, {'name' : 'Python'}, {'name' : 'Ruby'}]
+languages = [{'name' : 'English'}, {'name' : 'Russian'}, {'name' : 'Serbian'}]
 
 def get_language(name):
     return [language for language in languages if language['name'] == name][0]
