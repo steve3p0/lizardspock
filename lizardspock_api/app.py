@@ -1,44 +1,48 @@
 # Rock Paper Scissors Lisard Spock
 #
 # https://www.youtube.com/watch?v=R0pUbct9WgI
-
+from collections import namedtuple
+from typing import Dict, List, Union, NewType
 from flask import Flask, jsonify, request
-from flask.views import MethodView
-
+from flask_restful import reqparse, Resource, Api, fields, marshal, marshal_with, marshal_with_field
+import lizardspock
+import random
+import json
 
 app = Flask(__name__)
+api = Api(app)
 
-languages = [{'name' : 'English'}, {'name' : 'Russian'}, {'name' : 'Serbian'}]
+parser = reqparse.RequestParser()
+parser.add_argument('player_choice', type=int)
 
-def get_language(name):
-    return [language for language in languages if language['name'] == name][0]
+class Choices(Resource):
 
-class Language(MethodView):
-    def get(self, language_name):
-        if language_name:
-            return jsonify({'language' : get_language(language_name)})
-        else:
-            return jsonify({'languages': languages})
+    def get(self):
+        #return jsonify(choices)
+        return lizardspock.choices
+
+
+class Choice(Resource):
+
+    def get(self):
+        #return jsonify(get_random_choice())
+        return lizardspock.get_random_choice()
+
+
+class Play(Resource):
 
     def post(self):
-        new_language_name = request.json['name']
-        language = {'name' : new_language_name}
-        languages.append(language)
-        return jsonify({'language' : get_language(new_language_name)}), 201
+        args = parser.parse_args()
+        player_choice = int(args['player_choice'])
+        computer_choice = lizardspock.get_random_choice()['id']
+        result = lizardspock.play(player_choice, computer_choice)
+        return result
+        #return jsonify(result)
 
-    def put(self, language_name):
-        language = get_language(language_name)
 
-        new_language_name = request.json['name']
-        language['name'] = new_language_name
-        return jsonify({'language' : get_language(new_language_name)})
+api.add_resource(Choices, '/choices')
+api.add_resource(Choice, '/choice')
+api.add_resource(Play, '/play')
 
-    def delete(self, language_name):
-        language = get_language(language_name)
-        languages.remove(language)
-        return '', 204
-
-language_view = Language.as_view('language_api')
-app.add_url_rule('/language', methods=['POST'], view_func=language_view)
-app.add_url_rule('/language', methods=['GET'], defaults={'language_name' : None}, view_func=language_view)
-app.add_url_rule('/language/<language_name>', methods=['GET', 'PUT', 'DELETE'], view_func=language_view)
+if __name__ == '__main__':
+    app.run(debug=True)
